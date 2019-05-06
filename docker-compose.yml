@@ -1,0 +1,36 @@
+version: '3.7'
+
+services:
+  pad_b_gateway: 
+    build: ../gateway/   
+    depends_on:
+      - pad_b_registry
+    ports:
+        - '8080:8080'
+      
+  pad_b_registry: 
+     build: ../registry/
+     ports:
+         - '8761:8761'
+         
+         
+  pad_b_auth:
+     build: ../auth/
+     depends_on:
+       - pad_b_registry
+       - pad_b_mongodb_auth
+     ports:
+         - '8082:8082'
+         
+  pad_b_mongodb_auth:
+     image: mongo:latest
+     environment:
+          - MONGODB_USER="root" 
+          - MONGODB_PASS="root"
+     ports:
+            - '27017:27017'
+
+   
+      
+         
+    
