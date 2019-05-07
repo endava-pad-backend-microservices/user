@@ -1,9 +1,5 @@
 FROM node:10
 
-# Create app directory
-WORKDIR /usr/src/app
-
-
 
 # Install app dependencies
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
@@ -15,7 +11,8 @@ EXPOSE 8084
 
 COPY package*.json ./
 
-ENV server.url=pad_b_registry
+ENV SERVER_URL=pad-b-users
+ENV EUREKA_URL=pad-b-registry
 
 RUN npm install
 

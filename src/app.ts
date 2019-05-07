@@ -29,28 +29,26 @@ const config = require(path.join(__dirname, '../ormconfig.js'))
 const client = new Eureka({
   // application instance information
   instance: {
-    app: 'users',
-    hostName: 'localhost',
+    id: 'users',
+    instanceId: 'users',
+    app:'USERS',
+    hostName: process.env.SERVER_URL,
     ipAddr: '127.0.0.1',
-    vipAddress: 'localhost',
-    secureVipAddress: 'localhost',
+    vipAddress: 'users',
+    secureVipAddress: 'users',
     status: "STARTING",
     port: {
       '$': 8084,
       '@enabled': true,
     },
-    securePort: { 
-        '$': '8443', 
-        '@enabled': true 
-    },
     dataCenterInfo: {
       '@class': "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
       'name': "MyOwn"
-    },
+    }
   },
   eureka: {
     // eureka server host / port
-    host: 'localhost',
+    host: process.env.EUREKA_URL,
     port: 8761,
     servicePath: '/eureka/apps/'
   },
@@ -64,7 +62,7 @@ client.start();
 
 const app = createExpressServer({
   cors: true,
-  routePrefix: "/api",
+  routePrefix: "",
   controllers: [__dirname + "/controllers/*.ts"]
 });
 
