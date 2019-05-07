@@ -13,6 +13,7 @@ COPY package*.json ./
 
 ENV SERVER_URL=pad-b-users
 ENV EUREKA_URL=pad-b-registry
+ENV POSTGRES_HOSTNAME=pad-b-users
 
 RUN npm install
 
@@ -24,7 +25,7 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
-CMD dockerize -wait tcp://$EUREKA_URL:8761 -timeout 60m yarn start
+CMD dockerize -wait tcp://$EUREKA_URL:8761 -timeout 60m yarn start && dockerize -wait tcp://$POSTGRES_HOSTNAME:5432 -timeout 60m yarn start
 
 RUN npm run build 
 

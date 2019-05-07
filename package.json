@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "nodemon",
+    "swagger": "tsoa swagger --decoratorPlugin routing-controllers",
     "start": "ts-node src/app.ts",
     "prod": "npm run build && npm run start"
   },
@@ -30,6 +31,7 @@
     "pg": "^7.8.0",
     "reflect-metadata": "^0.1.13",
     "routing-controllers": "^0.7.7",
+    "tsoa": "github:chaowlert/tsoa#dist",
     "typeorm": "^0.2.12"
   },
   "keywords": [

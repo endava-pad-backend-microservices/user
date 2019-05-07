@@ -25,48 +25,55 @@ const config = require(path.join(__dirname, '../ormconfig.js'))
 //   })
 //   .catch(error => console.log("TypeORM connection error: ", error));
 
-// example configuration
-const client = new Eureka({
-  // application instance information
-  instance: {
-    id: 'users',
-    instanceId: 'users',
-    app:'USERS',
-    hostName: process.env.SERVER_URL,
-    ipAddr: '127.0.0.1',
-    vipAddress: 'users',
-    secureVipAddress: 'users',
-    status: "STARTING",
-    port: {
-      '$': 8084,
-      '@enabled': true,
+createConnection(config).then(async connection => {
+  const client = new Eureka({
+    // application instance information
+    instance: {
+      id: 'users',
+      instanceId: 'users',
+      app: 'USERS',
+      hostName: process.env.SERVER_URL,
+      ipAddr: '127.0.0.1',
+      vipAddress: 'users',
+      secureVipAddress: 'users',
+      status: "STARTING",
+      port: {
+        '$': 8084,
+        '@enabled': true,
+      },
+      dataCenterInfo: {
+        '@class': "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
+        'name': "MyOwn"
+      }
     },
-    dataCenterInfo: {
-      '@class': "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
-      'name': "MyOwn"
-    }
-  },
-  eureka: {
-    // eureka server host / port
-    host: process.env.EUREKA_URL,
-    port: 8761,
-    servicePath: '/eureka/apps/'
-  },
+    eureka: {
+      // eureka server host / port
+      host: process.env.EUREKA_URL,
+      port: 8761,
+      servicePath: '/eureka/apps/'
+    },
+  });
+
+  const app = createExpressServer({
+    cors: true,
+    routePrefix: "",
+    controllers: [__dirname + "/controllers/*.ts"]
+  });
+
+  // run express application on port 3000
+  app.listen(8084);
+
+  console.log('App is ready');
+
+
+  client.logger.level('debug');
+
+  client.start();
 });
 
-client.logger.level('debug');
-
-client.start();
 
 
 
-const app = createExpressServer({
-  cors: true,
-  routePrefix: "",
-  controllers: [__dirname + "/controllers/*.ts"]
-});
 
-// run express application on port 3000
-app.listen(8084);
 
-console.log('App is ready');
+
