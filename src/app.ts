@@ -33,7 +33,7 @@ createConnection(config).then(async connection => {
       instanceId: 'users',
       app: 'USERS',
       hostName: process.env.SERVER_URL,
-      ipAddr: '127.0.0.1',
+      ipAddr: process.env.SERVER_URL,
       vipAddress: 'users',
       secureVipAddress: 'users',
       status: "STARTING",

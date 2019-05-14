@@ -36,7 +36,6 @@ export class UserController {
 
     @Post('/getOne')
     async getOne(@Body() request: any) {
-
         const userToFind = await this.repository.createQueryBuilder('user')
             .select(['user.id', 'user.firstName', 'user.lastName', 'user.email', 'user.password'])
             .where('user.name = :name ', { name: request.username })
@@ -51,6 +50,7 @@ export class UserController {
 
         if (bcrypt.compareSync(request.password, userToFind.password)) {
             delete userToFind.password;
+            userToFind.roles=['ADMIN'];
             return {
                 success: true,
                 data: userToFind
@@ -63,5 +63,5 @@ export class UserController {
         }
 
     }
-
+    
 }
