@@ -1,11 +1,14 @@
-import { JsonController, Post, Body, Put } from "routing-controllers";
-import bcrypt = require('bcrypt');
+import { Body, ContentType, Controller, Post, Put } from 'routing-controllers';
+import { OpenAPI } from 'routing-controllers-openapi';
 import { getManager } from "typeorm";
 import { User } from "../persistence/entity/user.entity";
-import { BroadcasterResult } from "typeorm/subscriber/BroadcasterResult";
+import bcrypt = require('bcrypt');
 
 
-@JsonController()
+@OpenAPI({
+    summary: 'Users management'
+})
+@Controller()
 export class UserController {
     repository: any;
     constructor() {
@@ -13,6 +16,8 @@ export class UserController {
     }
 
     @Put('/create')
+    @ContentType("application/json")
+    @OpenAPI({ summary: 'Create an user' })
     async createUser(@Body() request: any) {
         const newUser = {
             ...request,
@@ -35,6 +40,8 @@ export class UserController {
     }
 
     @Post('/getOne')
+    @ContentType("application/json")
+
     async getOne(@Body() request: any) {
         const userToFind = await this.repository.createQueryBuilder('user')
             .select(['user.id', 'user.firstName', 'user.lastName', 'user.email', 'user.password'])
@@ -50,7 +57,7 @@ export class UserController {
 
         if (bcrypt.compareSync(request.password, userToFind.password)) {
             delete userToFind.password;
-            userToFind.roles=['ADMIN'];
+            userToFind.roles = ['ADMIN'];
             return {
                 success: true,
                 data: userToFind
@@ -63,5 +70,6 @@ export class UserController {
         }
 
     }
-    
+
+
 }

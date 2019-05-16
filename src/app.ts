@@ -1,29 +1,15 @@
 import "reflect-metadata"; // this shim is required
-import { createExpressServer } from "routing-controllers";
+import { createExpressServer, getMetadataArgsStorage } from "routing-controllers";
 import { createConnection } from "typeorm";
+import { getFromContainer, MetadataStorage, validateSync } from 'class-validator';
+import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import path = require('path');
 const Eureka = require('eureka-js-client').Eureka;
 const config = require(path.join(__dirname, '../ormconfig.js'))
+import { routingControllersToSpec } from 'routing-controllers-openapi'
+import * as swaggerUi from 'swagger-ui-express';
+var fs = require('fs');
 
-
-
-// creates express app, registers all controller routes and returns you express app instance
-
-// create connection with database
-// note that it's not active database connection
-// TypeORM creates connection pools and uses them for your requests
-// createConnection(config)
-//   .then(async connection => {
-//     const app = createExpressServer({
-//       cors: true,
-//       routePrefix: "/api",
-//       controllers: [__dirname + "/controllers/*.ts"]
-//     });
-
-//     // run express application on port 3000
-//     app.listen(8084);
-//   })
-//   .catch(error => console.log("TypeORM connection error: ", error));
 
 createConnection(config).then(async connection => {
   const client = new Eureka({
@@ -54,11 +40,47 @@ createConnection(config).then(async connection => {
     },
   });
 
-  const app = createExpressServer({
+  const routingControllersOptions = {
     cors: true,
     routePrefix: "",
     controllers: [__dirname + "/controllers/*.ts"]
+  };
+
+
+
+
+  // Parse class-validator classes into JSON Schema:
+  const metadatas = (getFromContainer(MetadataStorage) as any).validationMetadatas;
+
+  const schemas = validationMetadatasToSchemas(metadatas, {
+    refPointerPrefix: '#/components/schemas/'
   });
+
+
+
+  const app = createExpressServer(routingControllersOptions);
+
+  const storage = getMetadataArgsStorage();
+
+  const spec = routingControllersToSpec(storage, routingControllersOptions, {
+    components: {
+      schemas
+    },
+    info: {
+      description: 'A microservice written in NodeJS',
+      title: 'Users Management Microservice',
+      version: '1.0.0'
+    },
+
+  })
+
+  // Generate swagger file
+  fs.writeFileSync('./swagger.json', JSON.stringify(spec));
+
+  const swaggerDocument = require('../swagger.json');
+  app.use('/api/users/v2/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+
 
   // run express application on port 3000
   app.listen(8084);
