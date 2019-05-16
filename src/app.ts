@@ -9,6 +9,8 @@ const config = require(path.join(__dirname, '../ormconfig.js'))
 import { routingControllersToSpec } from 'routing-controllers-openapi'
 import * as swaggerUi from 'swagger-ui-express';
 var fs = require('fs');
+var healthcheck = require('healthcheck-middleware');
+
 
 
 createConnection(config).then(async connection => {
@@ -20,6 +22,8 @@ createConnection(config).then(async connection => {
       app: 'USERS',
       hostName: process.env.SERVER_URL,
       ipAddr: process.env.SERVER_URL,
+      statusPageUrl: 'http://' + process.env.SERVER_URL + ':8084/healthcheck',
+      healthCheckUrl: 'http://' + process.env.SERVER_URL + ':8084/healthcheck',
       vipAddress: 'users',
       secureVipAddress: 'users',
       status: "STARTING",
@@ -80,6 +84,7 @@ createConnection(config).then(async connection => {
   const swaggerDocument = require('../swagger.json');
   app.use('/api/users/v2/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+  app.use('/healthcheck', healthcheck());
 
 
   // run express application on port 3000
