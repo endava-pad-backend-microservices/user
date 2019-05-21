@@ -1,8 +1,51 @@
 import { Body, ContentType, Controller, Post, Put } from 'routing-controllers';
-import { OpenAPI } from 'routing-controllers-openapi';
+import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import { getManager } from "typeorm";
-import { User } from "../persistence/entity/user.entity";
+import { User } from "./persistence/entity/user.entity";
 import bcrypt = require('bcrypt');
+import { IsString, IsEmail, IsBoolean, IsOptional, IsNumber } from 'class-validator';
+
+
+class CreateUserBody {
+    @IsString()
+    name: string;
+
+    @IsString()
+    password: string;
+
+    @IsString()
+    firstName: string;
+
+    @IsString()
+    lastName: string;
+
+    @IsString()
+    @IsEmail()
+    email: string;
+}
+
+class Response {
+    @IsBoolean()
+    success: boolean;
+
+    @IsString()
+    message: string;
+
+    @IsOptional()
+    @IsNumber()
+    id?: number;
+
+    @IsOptional()
+    data?: Object;
+}
+
+class LoginRequest {
+    @IsString()
+    username: string;
+
+    @IsString()
+    password: string;
+}
 
 
 @OpenAPI({
@@ -18,7 +61,10 @@ export class UserController {
     @Put('/create')
     @ContentType("application/json")
     @OpenAPI({ summary: 'Create an user' })
-    async createUser(@Body() request: any) {
+    @ResponseSchema(Response, {
+        contentType: 'application/json',
+        statusCode: '200'})
+    async createUser(@Body({ type: CreateUserBody }) request: CreateUserBody): Promise<Response> {
         const newUser = {
             ...request,
             password: bcrypt.hashSync(request.password, 10)
@@ -41,8 +87,11 @@ export class UserController {
 
     @Post('/getOne')
     @ContentType("application/json")
-
-    async getOne(@Body() request: any) {
+    @OpenAPI({ summary: 'Find user by name and password' })
+    @ResponseSchema(Response, {
+        contentType: 'application/json',
+        statusCode: '200'})
+    async getOne(@Body({ type: LoginRequest }) request: LoginRequest): Promise<Response> {
         const userToFind = await this.repository.createQueryBuilder('user')
             .select(['user.id', 'user.firstName', 'user.lastName', 'user.email', 'user.password'])
             .where('user.name = :name ', { name: request.username })
@@ -60,6 +109,7 @@ export class UserController {
             userToFind.roles = ['ADMIN'];
             return {
                 success: true,
+                message: 'Login success',
                 data: userToFind
             };
         } else {
