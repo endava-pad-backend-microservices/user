@@ -23,7 +23,7 @@ export class UserController {
     @OpenAPI({ summary: 'Create an user' })
     @ResponseSchema(Response, {
         contentType: 'application/json',
-        statusCode: '200'
+        statusCode: '200',
     })
     async createUser(@Body({ type: CreateUserBody }) request: CreateUserBody): Promise<Response> {
         const newUser = {
