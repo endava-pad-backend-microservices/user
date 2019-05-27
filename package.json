@@ -28,6 +28,7 @@
     "body-parser": "^1.18.3",
     "class-validator": "^0.9.1",
     "class-validator-jsonschema": "^1.2.0",
+    "cloud-config-client": "^1.4.2",
     "cors": "^2.8.5",
     "eureka-js-client": "^4.4.2",
     "express": "^4.16.4",

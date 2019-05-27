@@ -5,6 +5,8 @@ import { getFromContainer, MetadataStorage } from 'class-validator';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import path = require('path');
 import { Eureka } from 'eureka-js-client';
+const cloudConfigClient = require("cloud-config-client");
+
 const config = require(path.join(__dirname, '../ormconfig.js'))
 import { routingControllersToSpec } from 'routing-controllers-openapi';
 import { UserController } from './user.controller'
@@ -123,6 +125,18 @@ createConnection(config).then(async connection => {
 
   app.use('/healthcheck', healthcheck());
 
+
+  cloudConfigClient.load({
+    context: process.env,
+    endpoint: 'http://localhost:8086',
+    name: 'dev',
+    profiles: 'dev',
+    label:'configuration',
+    application:'configuration',
+    version:'1.0.2',
+  }).then(config => {
+    console.log(config);
+  })
 
   // run express application on port 3000
   app.listen(8084);
