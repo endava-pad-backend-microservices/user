@@ -18,7 +18,7 @@ import * as swaggerUi from 'swagger-ui-express';
 import fs = require('fs');
 
 
-const APP_LISTEN_PORT:number=8084;
+const APP_LISTEN_PORT = 8084;
 
 
 createConnection(config).then(async connection => {
