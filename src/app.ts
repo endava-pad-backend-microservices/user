@@ -32,8 +32,8 @@ createConnection(config).then(async connection => {
 
     instance: {
       app: 'USERS',
-      id: 'users',
       healthCheckUrl: 'http://' + process.env.SERVER_URL + ':8084/healthcheck',
+      id: 'users',
       dataCenterInfo: {
         '@class': "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
         'name': "MyOwn"
@@ -54,9 +54,9 @@ createConnection(config).then(async connection => {
   });
 
   const routingControllersOptions = {
+    controllers: [UserController],
     cors: true,
     routePrefix: "",
-    controllers: [UserController],
   };
 
 
@@ -92,7 +92,7 @@ createConnection(config).then(async connection => {
 
   // Generate swagger file
   fs.writeFileSync('./swagger.json', JSON.stringify(spec));
-  
+
   const swaggerDocument = require('../swagger.json')
 
   app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -107,7 +107,7 @@ createConnection(config).then(async connection => {
       from: 'openapi_3',
       source: './swagger.json',
       to: 'swagger_2',
-    }).then( (converted: any) => {
+    }).then((converted: any) => {
       converted.fillMissing();
       const options = {
         synax: 'json',
