@@ -14,7 +14,7 @@ import { Response } from './common.response';
 @Controller()
 export class UserController {
     private repository: any;
-    private PASSWORD_HASH_SIZE = 10;
+    private PASSWORD_HASH_SIZE: number = 10;
     constructor() {
         this.repository = getManager().getRepository(User);
     }
