@@ -21,5 +21,4 @@ export class User {
 
   @Column()
   private password: string;
-
 }
