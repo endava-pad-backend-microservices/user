@@ -13,7 +13,7 @@ const healthcheck = require('healthcheck-middleware');
 const Converter = require('api-spec-converter');
 import * as swaggerUi from 'swagger-ui-express';
 
-var fs = require('fs');
+const fs = require('fs');
 
 
 
@@ -105,8 +105,8 @@ createConnection(config).then(async connection => {
 
     Converter.convert({
       from: 'openapi_3',
-      to: 'swagger_2',
       source: './swagger.json',
+      to: 'swagger_2',
     }).then( (converted: any) => {
       converted.fillMissing();
       const options = {
