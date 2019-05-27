@@ -5,17 +5,17 @@ import { getFromContainer, MetadataStorage } from 'class-validator';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import path = require('path');
 import { Eureka } from 'eureka-js-client';
-const cloudConfigClient = require("cloud-config-client");
+import cloudConfigClient = require("cloud-config-client");
 
 const config = require(path.join(__dirname, '../ormconfig.js'))
 import { routingControllersToSpec } from 'routing-controllers-openapi';
 import { UserController } from './user.controller'
-
-const healthcheck = require('healthcheck-middleware');
-const Converter = require('api-spec-converter');
+import { Request, Response } from 'express';
+import healthcheck = require('healthcheck-middleware');
+import Converter = require('api-spec-converter');
 import * as swaggerUi from 'swagger-ui-express';
 
-const fs = require('fs');
+import fs = require('fs');
 
 
 
@@ -102,7 +102,7 @@ createConnection(config).then(async connection => {
 
   //Convert from open-api to swagger 2 for spring boot
 
-  app.get('/v2/api-docs', function (req, res) {
+  app.get('/v2/api-docs', (req: Request, res: Response) => {
     res.header('Content-Type', 'application/json');
 
     Converter.convert({
@@ -131,9 +131,9 @@ createConnection(config).then(async connection => {
     endpoint: 'http://localhost:8086',
     name: 'dev',
     profiles: 'dev',
-    label:'configuration',
-    application:'configuration',
-    version:'1.0.2',
+    label: 'configuration',
+    application: 'configuration',
+    version: '1.0.2',
   }).then(config => {
     console.log(config);
   })

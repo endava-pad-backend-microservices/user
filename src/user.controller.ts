@@ -9,11 +9,11 @@ import { Response } from './common.response';
 
 
 @OpenAPI({
-    summary: 'Users management'
+    summary: 'Users management',
 })
 @Controller()
 export class UserController {
-    repository: any;
+    private repository: any;
     constructor() {
         this.repository = getManager().getRepository(User);
     }
@@ -25,7 +25,7 @@ export class UserController {
         contentType: 'application/json',
         statusCode: '200',
     })
-    async createUser(@Body({ type: CreateUserBody }) request: CreateUserBody): Promise<Response> {
+    public async createUser(@Body({ type: CreateUserBody }) request: CreateUserBody): Promise<Response> {
         const newUser = {
             ...request,
             password: bcrypt.hashSync(request.password, 10)
@@ -36,12 +36,12 @@ export class UserController {
             return {
                 success: true,
                 id: savedUser.id,
-                message: 'User Created'
+                message: 'User Created',
             }
         } catch (error) {
             return {
                 success: false,
-                message: error
+                message: error,
             }
         }
     }
@@ -53,7 +53,7 @@ export class UserController {
         contentType: 'application/json',
         statusCode: '200',
     })
-    async getOne(@Body({ type: LoginRequest }) request: LoginRequest): Promise<Response> {
+    public async getOne(@Body({ type: LoginRequest }) request: LoginRequest): Promise<Response> {
         const userToFind = await this.repository.createQueryBuilder('user')
             .select(['user.id', 'user.firstName', 'user.lastName', 'user.email', 'user.password'])
             .where('user.name = :name ', { name: request.username })
@@ -62,7 +62,7 @@ export class UserController {
         if (!userToFind) {
             return {
                 success: false,
-                message: 'Invalid user or password'
+                message: 'Invalid user or password',
             }
         }
 
@@ -72,12 +72,12 @@ export class UserController {
             return {
                 success: true,
                 message: 'Login success',
-                data: userToFind
+                data: userToFind,
             };
         } else {
             return {
                 success: false,
-                message: 'Invalid user or password'
+                message: 'Invalid user or password',
             }
         }
 
