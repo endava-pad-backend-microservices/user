@@ -107,7 +107,7 @@ createConnection(config).then(async connection => {
       from: 'openapi_3',
       to: 'swagger_2',
       source: './swagger.json',
-    }).then(function (converted: any) {
+    }).then( (converted: any) => {
       converted.fillMissing();
       const options = {
         synax: 'json',
