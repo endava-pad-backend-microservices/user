@@ -14,6 +14,7 @@ import { Response } from './common.response';
 @Controller()
 export class UserController {
     private repository: any;
+    private PASSWORD_HASH_SIZE:number = 10;
     constructor() {
         this.repository = getManager().getRepository(User);
     }
@@ -28,7 +29,7 @@ export class UserController {
     public async createUser(@Body({ type: CreateUserBody }) request: CreateUserBody): Promise<Response> {
         const newUser = {
             ...request,
-            password: bcrypt.hashSync(request.password, 10)
+            password: bcrypt.hashSync(request.password, this.PASSWORD_HASH_SIZE),
         }
 
         try {

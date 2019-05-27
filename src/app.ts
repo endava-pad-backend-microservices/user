@@ -18,7 +18,7 @@ import * as swaggerUi from 'swagger-ui-express';
 import fs = require('fs');
 
 
-
+const APP_LISTEN_PORT:number=8084;
 
 
 createConnection(config).then(async connection => {
@@ -29,7 +29,7 @@ createConnection(config).then(async connection => {
       // eureka server host / port
       host: process.env.EUREKA_URL,
       port: 8761,
-      servicePath: '/eureka/apps/'
+      servicePath: '/eureka/apps/',
     },
 
     instance: {
@@ -38,7 +38,7 @@ createConnection(config).then(async connection => {
       id: 'users',
       dataCenterInfo: {
         '@class': "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
-        'name': "MyOwn"
+        'name': "MyOwn",
       },
       hostName: process.env.SERVER_URL,
       instanceId: 'users',
@@ -82,7 +82,7 @@ createConnection(config).then(async connection => {
 
   const spec = routingControllersToSpec(storage, routingControllersOptions, {
     components: {
-      schemas
+      schemas,
     },
     info: {
       description: 'A microservice written in NodeJS',
@@ -113,7 +113,7 @@ createConnection(config).then(async connection => {
       converted.fillMissing();
       const options = {
         synax: 'json',
-        order: 'openapi'
+        order: 'openapi',
       };
 
       res.header('Content-Type', 'application/json');
@@ -139,7 +139,7 @@ createConnection(config).then(async connection => {
   })
 
   // run express application on port 3000
-  app.listen(8084);
+  app.listen(APP_LISTEN_PORT);
 
   console.log('App is ready');
 
