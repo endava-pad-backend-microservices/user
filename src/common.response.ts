@@ -13,5 +13,5 @@ export class Response {
     public id?: number;
 
     @IsOptional()
-    public data?: Object;
+    public data?: {};
 }

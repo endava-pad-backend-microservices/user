@@ -51,7 +51,7 @@ export class UserController {
     @OpenAPI({ summary: 'Find user by name and password' })
     @ResponseSchema(Response, {
         contentType: 'application/json',
-        statusCode: '200'
+        statusCode: '200',
     })
     async getOne(@Body({ type: LoginRequest }) request: LoginRequest): Promise<Response> {
         const userToFind = await this.repository.createQueryBuilder('user')

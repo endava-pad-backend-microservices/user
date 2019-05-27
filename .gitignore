@@ -84,3 +84,6 @@ typings/
 
 # Package.json lock file
 package-lock.json
+
+# Auto Generated Swagger json file
+swagger.json
