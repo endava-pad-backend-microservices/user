@@ -4,13 +4,15 @@ import { createConnection } from "typeorm";
 import { getFromContainer, MetadataStorage } from 'class-validator';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import path = require('path');
-const Eureka = require('eureka-js-client').Eureka;
+import { Eureka } from 'eureka-js-client';
 const config = require(path.join(__dirname, '../ormconfig.js'))
 import { routingControllersToSpec } from 'routing-controllers-openapi';
 import { UserController } from './user.controller'
-var healthcheck = require('healthcheck-middleware');
-var Converter = require('api-spec-converter');
+
+const healthcheck = require('healthcheck-middleware');
+const Converter = require('api-spec-converter');
 import * as swaggerUi from 'swagger-ui-express';
+
 var fs = require('fs');
 
 
@@ -20,14 +22,26 @@ var fs = require('fs');
 createConnection(config).then(async connection => {
   const client = new Eureka({
     // application instance information
+
+    eureka: {
+      // eureka server host / port
+      host: process.env.EUREKA_URL,
+      port: 8761,
+      servicePath: '/eureka/apps/'
+    },
+
     instance: {
-      id: 'users',
-      instanceId: 'users',
       app: 'USERS',
+      id: 'users',
+      healthCheckUrl: 'http://' + process.env.SERVER_URL + ':8084/healthcheck',
+      dataCenterInfo: {
+        '@class': "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
+        'name': "MyOwn"
+      },
       hostName: process.env.SERVER_URL,
+      instanceId: 'users',
       ipAddr: process.env.SERVER_URL,
       statusPageUrl: 'http://' + process.env.SERVER_URL + ':8084/healthcheck',
-      healthCheckUrl: 'http://' + process.env.SERVER_URL + ':8084/healthcheck',
       vipAddress: 'users',
       secureVipAddress: 'users',
       status: "STARTING",
@@ -35,24 +49,16 @@ createConnection(config).then(async connection => {
         '$': 8084,
         '@enabled': true,
       },
-      dataCenterInfo: {
-        '@class': "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
-        'name': "MyOwn"
-      }
-    },
-    eureka: {
-      // eureka server host / port
-      host: process.env.EUREKA_URL,
-      port: 8761,
-      servicePath: '/eureka/apps/'
+
     },
   });
 
   const routingControllersOptions = {
     cors: true,
     routePrefix: "",
-    controllers: [UserController]
+    controllers: [UserController],
   };
+
 
 
 
@@ -61,7 +67,7 @@ createConnection(config).then(async connection => {
   const metadatas = (getFromContainer(MetadataStorage) as any).validationMetadatas;
 
   const schemas = validationMetadatasToSchemas(metadatas, {
-    refPointerPrefix: '#/components/schemas/'
+    refPointerPrefix: '#/components/schemas/',
   });
 
 
@@ -79,13 +85,14 @@ createConnection(config).then(async connection => {
     info: {
       description: 'A microservice written in NodeJS',
       title: 'Users Management Microservice',
-      version: '1.0.0'
+      version: '1.0.0',
     },
 
   })
 
   // Generate swagger file
   fs.writeFileSync('./swagger.json', JSON.stringify(spec));
+  
   const swaggerDocument = require('../swagger.json')
 
   app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -99,8 +106,8 @@ createConnection(config).then(async connection => {
     Converter.convert({
       from: 'openapi_3',
       to: 'swagger_2',
-      source: './swagger.json'
-    }).then(function (converted) {
+      source: './swagger.json',
+    }).then(function (converted: any) {
       converted.fillMissing();
       const options = {
         synax: 'json',
@@ -121,9 +128,6 @@ createConnection(config).then(async connection => {
   app.listen(8084);
 
   console.log('App is ready');
-
-
-  client.logger.level('debug');
 
   client.start();
 });

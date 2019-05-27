@@ -3,49 +3,9 @@ import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import { getManager } from "typeorm";
 import { User } from "./persistence/entity/user.entity";
 import bcrypt = require('bcrypt');
-import { IsString, IsEmail, IsBoolean, IsOptional, IsNumber } from 'class-validator';
-
-
-class CreateUserBody {
-    @IsString()
-    name: string;
-
-    @IsString()
-    password: string;
-
-    @IsString()
-    firstName: string;
-
-    @IsString()
-    lastName: string;
-
-    @IsString()
-    @IsEmail()
-    email: string;
-}
-
-class Response {
-    @IsBoolean()
-    success: boolean;
-
-    @IsString()
-    message: string;
-
-    @IsOptional()
-    @IsNumber()
-    id?: number;
-
-    @IsOptional()
-    data?: Object;
-}
-
-class LoginRequest {
-    @IsString()
-    username: string;
-
-    @IsString()
-    password: string;
-}
+import { CreateUserBody } from './create.user.request';
+import { LoginRequest } from './login.request';
+import { Response } from './common.response';
 
 
 @OpenAPI({
@@ -63,7 +23,8 @@ export class UserController {
     @OpenAPI({ summary: 'Create an user' })
     @ResponseSchema(Response, {
         contentType: 'application/json',
-        statusCode: '200'})
+        statusCode: '200'
+    })
     async createUser(@Body({ type: CreateUserBody }) request: CreateUserBody): Promise<Response> {
         const newUser = {
             ...request,
@@ -90,7 +51,8 @@ export class UserController {
     @OpenAPI({ summary: 'Find user by name and password' })
     @ResponseSchema(Response, {
         contentType: 'application/json',
-        statusCode: '200'})
+        statusCode: '200'
+    })
     async getOne(@Body({ type: LoginRequest }) request: LoginRequest): Promise<Response> {
         const userToFind = await this.repository.createQueryBuilder('user')
             .select(['user.id', 'user.firstName', 'user.lastName', 'user.email', 'user.password'])
