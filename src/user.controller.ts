@@ -14,7 +14,7 @@ import { Response } from './common.response';
 @Controller()
 export class UserController {
     private repository: any;
-    private PASSWORD_HASH_SIZE: number = 10;
+    private PASSWORD_HASH_SIZE:number = +process.env["BCRYPT_HASH"];
     constructor() {
         this.repository = getManager().getRepository(User);
     }

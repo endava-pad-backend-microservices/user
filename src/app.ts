@@ -135,7 +135,7 @@ createConnection(config).then(async connection => {
     application: 'configuration',
     version: '1.0.2',
   }).then(config => {
-    console.log(config);
+    process.env['BCRYPT_HASH'] = config.properties["users.bcrypt-hash-size"];
   })
 
   // run express application on port 3000
