@@ -3,57 +3,18 @@ import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import { getManager } from "typeorm";
 import { User } from "./persistence/entity/user.entity";
 import bcrypt = require('bcrypt');
-import { IsString, IsEmail, IsBoolean, IsOptional, IsNumber } from 'class-validator';
-
-
-class CreateUserBody {
-    @IsString()
-    name: string;
-
-    @IsString()
-    password: string;
-
-    @IsString()
-    firstName: string;
-
-    @IsString()
-    lastName: string;
-
-    @IsString()
-    @IsEmail()
-    email: string;
-}
-
-class Response {
-    @IsBoolean()
-    success: boolean;
-
-    @IsString()
-    message: string;
-
-    @IsOptional()
-    @IsNumber()
-    id?: number;
-
-    @IsOptional()
-    data?: Object;
-}
-
-class LoginRequest {
-    @IsString()
-    username: string;
-
-    @IsString()
-    password: string;
-}
+import { CreateUserBody } from './create.user.request';
+import { LoginRequest } from './login.request';
+import { Response } from './common.response';
 
 
 @OpenAPI({
-    summary: 'Users management'
+    summary: 'Users management',
 })
 @Controller()
 export class UserController {
-    repository: any;
+    private repository: any;
+    private PASSWORD_HASH_SIZE: number = +process.env["BCRYPT_HASH"];
     constructor() {
         this.repository = getManager().getRepository(User);
     }
@@ -63,11 +24,12 @@ export class UserController {
     @OpenAPI({ summary: 'Create an user' })
     @ResponseSchema(Response, {
         contentType: 'application/json',
-        statusCode: '200'})
-    async createUser(@Body({ type: CreateUserBody }) request: CreateUserBody): Promise<Response> {
+        statusCode: '200',
+    })
+    public async createUser(@Body({ type: CreateUserBody }) request: CreateUserBody): Promise<Response> {
         const newUser = {
             ...request,
-            password: bcrypt.hashSync(request.password, 10)
+            password: bcrypt.hashSync(request.password, this.PASSWORD_HASH_SIZE),
         }
 
         try {
@@ -75,12 +37,12 @@ export class UserController {
             return {
                 success: true,
                 id: savedUser.id,
-                message: 'User Created'
+                message: 'User Created',
             }
         } catch (error) {
             return {
                 success: false,
-                message: error
+                message: error,
             }
         }
     }
@@ -90,8 +52,9 @@ export class UserController {
     @OpenAPI({ summary: 'Find user by name and password' })
     @ResponseSchema(Response, {
         contentType: 'application/json',
-        statusCode: '200'})
-    async getOne(@Body({ type: LoginRequest }) request: LoginRequest): Promise<Response> {
+        statusCode: '200',
+    })
+    public async getOne(@Body({ type: LoginRequest }) request: LoginRequest): Promise<Response> {
         const userToFind = await this.repository.createQueryBuilder('user')
             .select(['user.id', 'user.firstName', 'user.lastName', 'user.email', 'user.password'])
             .where('user.name = :name ', { name: request.username })
@@ -100,7 +63,7 @@ export class UserController {
         if (!userToFind) {
             return {
                 success: false,
-                message: 'Invalid user or password'
+                message: 'Invalid user or password',
             }
         }
 
@@ -110,12 +73,12 @@ export class UserController {
             return {
                 success: true,
                 message: 'Login success',
-                data: userToFind
+                data: userToFind,
             };
         } else {
             return {
                 success: false,
-                message: 'Invalid user or password'
+                message: 'Invalid user or password',
             }
         }
 

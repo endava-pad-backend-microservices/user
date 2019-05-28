@@ -4,30 +4,46 @@ import { createConnection } from "typeorm";
 import { getFromContainer, MetadataStorage } from 'class-validator';
 import { validationMetadatasToSchemas } from 'class-validator-jsonschema';
 import path = require('path');
-const Eureka = require('eureka-js-client').Eureka;
+import { Eureka } from 'eureka-js-client';
+import cloudConfigClient = require("cloud-config-client");
+
 const config = require(path.join(__dirname, '../ormconfig.js'))
 import { routingControllersToSpec } from 'routing-controllers-openapi';
 import { UserController } from './user.controller'
-var healthcheck = require('healthcheck-middleware');
-var Converter = require('api-spec-converter');
+import { Request, Response } from 'express';
+import healthcheck = require('healthcheck-middleware');
+import Converter = require('api-spec-converter');
 import * as swaggerUi from 'swagger-ui-express';
-var fs = require('fs');
+
+import fs = require('fs');
 
 
-
+const APP_LISTEN_PORT = 8084;
 
 
 createConnection(config).then(async connection => {
   const client = new Eureka({
     // application instance information
+
+    eureka: {
+      // eureka server host / port
+      host: process.env.EUREKA_URL,
+      port: 8761,
+      servicePath: '/eureka/apps/',
+    },
+
     instance: {
-      id: 'users',
-      instanceId: 'users',
       app: 'USERS',
+      healthCheckUrl: 'http://' + process.env.SERVER_URL + ':8084/healthcheck',
+      id: 'users',
+      dataCenterInfo: {
+        '@class': "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
+        'name': "MyOwn",
+      },
       hostName: process.env.SERVER_URL,
+      instanceId: 'users',
       ipAddr: process.env.SERVER_URL,
       statusPageUrl: 'http://' + process.env.SERVER_URL + ':8084/healthcheck',
-      healthCheckUrl: 'http://' + process.env.SERVER_URL + ':8084/healthcheck',
       vipAddress: 'users',
       secureVipAddress: 'users',
       status: "STARTING",
@@ -35,24 +51,16 @@ createConnection(config).then(async connection => {
         '$': 8084,
         '@enabled': true,
       },
-      dataCenterInfo: {
-        '@class': "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
-        'name': "MyOwn"
-      }
-    },
-    eureka: {
-      // eureka server host / port
-      host: process.env.EUREKA_URL,
-      port: 8761,
-      servicePath: '/eureka/apps/'
+
     },
   });
 
   const routingControllersOptions = {
+    controllers: [UserController],
     cors: true,
     routePrefix: "",
-    controllers: [UserController]
   };
+
 
 
 
@@ -61,7 +69,7 @@ createConnection(config).then(async connection => {
   const metadatas = (getFromContainer(MetadataStorage) as any).validationMetadatas;
 
   const schemas = validationMetadatasToSchemas(metadatas, {
-    refPointerPrefix: '#/components/schemas/'
+    refPointerPrefix: '#/components/schemas/',
   });
 
 
@@ -74,18 +82,19 @@ createConnection(config).then(async connection => {
 
   const spec = routingControllersToSpec(storage, routingControllersOptions, {
     components: {
-      schemas
+      schemas,
     },
     info: {
       description: 'A microservice written in NodeJS',
       title: 'Users Management Microservice',
-      version: '1.0.0'
+      version: '1.0.0',
     },
 
   })
 
   // Generate swagger file
   fs.writeFileSync('./swagger.json', JSON.stringify(spec));
+
   const swaggerDocument = require('../swagger.json')
 
   app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -93,18 +102,18 @@ createConnection(config).then(async connection => {
 
   //Convert from open-api to swagger 2 for spring boot
 
-  app.get('/v2/api-docs', function (req, res) {
+  app.get('/v2/api-docs', (req: Request, res: Response) => {
     res.header('Content-Type', 'application/json');
 
     Converter.convert({
       from: 'openapi_3',
+      source: './swagger.json',
       to: 'swagger_2',
-      source: './swagger.json'
-    }).then(function (converted) {
+    }).then((converted: any) => {
       converted.fillMissing();
       const options = {
         synax: 'json',
-        order: 'openapi'
+        order: 'openapi',
       };
 
       res.header('Content-Type', 'application/json');
@@ -117,13 +126,22 @@ createConnection(config).then(async connection => {
   app.use('/healthcheck', healthcheck());
 
 
+  cloudConfigClient.load({
+    context: process.env,
+    endpoint: 'http://localhost:8086',
+    name: 'dev',
+    profiles: 'dev',
+    label: 'configuration',
+    application: 'configuration',
+    version: '1.0.2',
+  }).then(config => {
+    process.env['BCRYPT_HASH'] = config.properties["users.bcrypt-hash-size"];
+  })
+
   // run express application on port 3000
-  app.listen(8084);
+  app.listen(APP_LISTEN_PORT);
 
   console.log('App is ready');
-
-
-  client.logger.level('debug');
 
   client.start();
 });
