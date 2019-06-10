@@ -35,7 +35,6 @@ createConnection(config).then(async connection => {
     instance: {
       app: 'USERS',
       healthCheckUrl: 'http://' + process.env.SERVER_URL + ':8084/healthcheck',
-      id: 'users',
       dataCenterInfo: {
         '@class': "com.netflix.appinfo.InstanceInfo$DefaultDataCenterInfo",
         'name': "MyOwn",
