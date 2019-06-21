@@ -1,5 +1,6 @@
 # Authentication Service
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/aeb5659b2e2448d887489a2c113b13f2)](https://www.codacy.com/app/Microservices/user?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=endava-pad-backend-microservices/user&amp;utm_campaign=Badge_Grade)
+[![Build Status](https://travis-ci.org/endava-pad-backend-microservices/user.svg?branch=master)](https://travis-ci.org/endava-pad-backend-microservices/user)
 
 The Users service enables the architecture to manage users for the hole system.
 

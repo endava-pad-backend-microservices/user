@@ -1,0 +1,17 @@
+language: nodejs
+
+cache: npm
+
+before_script:
+  - npm run setup
+  - npm run build
+
+script:
+  - npm test
+
+after_success:
+  - npm run typedoc
+  - npm pack
+
+before_install:
+  - npm i -g npm@version-number
