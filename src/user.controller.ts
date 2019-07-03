@@ -1,4 +1,4 @@
-import { Body, ContentType, Controller, Post, Put } from 'routing-controllers';
+import { Body, ContentType, Controller, Post, Put, Get } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import { getManager } from "typeorm";
 import { User } from "./persistence/entity/user.entity";
@@ -6,6 +6,7 @@ import bcrypt = require('bcrypt');
 import { CreateUserBody } from './create.user.request';
 import { LoginRequest } from './login.request';
 import { Response } from './common.response';
+import { GetAllUserRequest } from './get.users.request';
 
 
 @OpenAPI({
@@ -81,6 +82,63 @@ export class UserController {
                 message: 'Invalid user or password',
             }
         }
+
+    }
+
+    @Get('/')
+    @ContentType("application/json")
+    @OpenAPI({ summary: 'Find all users' })
+    @ResponseSchema(Response, {
+        contentType: 'application/json',
+        statusCode: '200',
+    })
+    public async getAllUsers(@Body({ type: GetAllUserRequest }) request: GetAllUserRequest): Promise<Response> {
+
+        const filter = {
+            firstName: '%',
+            lastName: '%',
+            email: '%'
+        };
+
+        // Change filter values if we have them in the request
+        // TODO:: must find a way to improve this
+        if (request.firstName) {
+            filter.firstName = '%' + request.firstName + '%';
+        }
+        if (request.lastName) {
+            filter.lastName = '%' + request.lastName + '%';
+        }
+
+        if (request.email) {
+            filter.email = '%' + request.email + '%';
+        }
+
+
+
+        // Create a Paginated query to return all the users
+        const allUsers: [User] = await this.repository
+            .createQueryBuilder('user')
+            .select(['user.id', 'user.firstName', 'user.lastName', 'user.email'])
+            .skip(request.offset)
+            .take(request.limit)
+            .where('user.email like :email and user.firstName like :firstName and user.lastName like :lastName', filter)
+            .getMany();
+
+            // Count how many records match
+            const userSize: any = await this.repository
+              .createQueryBuilder('user')
+              .select('COUNT(user.id)', 'count')
+              .where('user.email like :email and user.firstName like :firstName and user.lastName like :lastName', filter)
+              .getRawOne();
+        
+            return {
+              success: true,
+              message: 'All users',
+              data: {
+                  users: allUsers,
+                  count: userSize.count
+              }
+            };    
 
     }
 
