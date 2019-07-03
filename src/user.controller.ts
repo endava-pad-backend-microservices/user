@@ -1,4 +1,4 @@
-import { Body, ContentType, Controller, Post, Put, Get } from 'routing-controllers';
+import { Body, ContentType, Controller, Post, Put, Get, Patch, Param } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import { getCustomRepository } from "typeorm";
 import { UserRepository } from "./persistence/repository/user.repository";
@@ -9,6 +9,7 @@ import { CreateUserBody } from './create.user.request';
 import { LoginRequest } from './login.request';
 import { Response } from './common.response';
 import { GetAllUserRequest } from './get.users.request';
+import { UpdateUserRequest } from './update.user.request';
 
 
 @OpenAPI({
@@ -19,7 +20,7 @@ export class UserController {
     private repository: any;
     private PASSWORD_HASH_SIZE: number = +process.env["BCRYPT_HASH"];
     constructor() {
-        this.repository = getCustomRepository(UserRepository); 
+        this.repository = getCustomRepository(UserRepository);
 
     }
 
@@ -50,6 +51,7 @@ export class UserController {
             }
         }
     }
+
 
     @Post('/getOne')
     @ContentType("application/json")
@@ -117,8 +119,105 @@ export class UserController {
 
 
 
-    return this.repository.getAllUsers(filter);
+        return this.repository.getAllUsers(filter);
     }
 
+    @Post('/update')
+    @ContentType("application/json")
+    @OpenAPI({ summary: 'Update an user' })
+    @ResponseSchema(Response, {
+        contentType: 'application/json',
+        statusCode: '200',
+    })
+    public async updateUser(@Body({ type: UpdateUserRequest }) request: UpdateUserRequest): Promise<Response> {
+        const user = await this.repository.createQueryBuilder('user')
+            .where('user.id = :id ', { id: request.id })
+            .getOne();
+
+        user.firstName = request.firstName;
+        user.lastName = request.lastName;
+
+        try {
+            const user_updated = await this.repository.save(user);
+            return {
+                success: true,
+                id: user.id,
+                message: 'User Updated',
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error,
+            }
+        }
+    }
+
+    @Get('/enable')
+    @ContentType("application/json")
+    @OpenAPI({ summary: 'Enable an user' })
+    @ResponseSchema(Response, {
+        contentType: 'application/json',
+        statusCode: '200',
+    })
+    public async enableUser(@Param('key') key: string): Promise<Response> {
+        const user_hash = await this.repository.createQueryBuilder('hashuser')
+            .select(['hashuser.id'])
+            .where('hashuser.key = :key ', { key: key })
+            .getOne();
+
+        const user = await this.repository.createQueryBuilder('user')
+            .where('user.id = :id ', { id: user_hash.id })
+            .getOne();
+
+        user.enabled = true;
+
+        try {
+            const user_enabled = await this.repository.save(user);
+            return {
+                success: true,
+                id: user.id,
+                message: 'User Enabled',
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error,
+            }
+        }
+
+    }
+
+    @Get('/disable')
+    @ContentType("application/json")
+    @OpenAPI({ summary: 'Disable an user' })
+    @ResponseSchema(Response, {
+        contentType: 'application/json',
+        statusCode: '200',
+    })
+    public async disableUser(@Param('key') key: string): Promise<Response> {
+        const user_hash = await this.repository.createQueryBuilder('hashuser')
+            .select(['hashuser.id'])
+            .where('hashuser.key = :key ', { key: key })
+            .getOne();
+
+        const user = await this.repository.createQueryBuilder('user')
+            .where('user.id = :id ', { id: user_hash.id })
+            .getOne();
+
+        user.enabled = false;
+        try {
+            const user_disabled = await this.repository.save(user);
+            return {
+                success: true,
+                id: user.id,
+                message: 'User Disabled',
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error,
+            }
+        }
+    }
 
 }
