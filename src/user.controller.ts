@@ -1,4 +1,4 @@
-import { Body, ContentType, Controller, Post, Put, Get } from 'routing-controllers';
+import { Body, ContentType, Controller, Post, Put, Get, Patch, Param } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import { getManager } from "typeorm";
 import { User } from "./persistence/entity/user.entity";
@@ -7,6 +7,7 @@ import { CreateUserBody } from './create.user.request';
 import { LoginRequest } from './login.request';
 import { Response } from './common.response';
 import { GetAllUserRequest } from './get.users.request';
+import { UpdateUserRequest } from './update.user.request';
 
 
 @OpenAPI({
@@ -47,6 +48,7 @@ export class UserController {
             }
         }
     }
+
 
     @Post('/getOne')
     @ContentType("application/json")
@@ -118,29 +120,127 @@ export class UserController {
         // Create a Paginated query to return all the users
         const allUsers: [User] = await this.repository
             .createQueryBuilder('user')
-            .select(['user.id', 'user.firstName', 'user.lastName', 'user.email'])
+            .select(['user.id', 'user.firstName', 'user.lastName', 'user.email', 'user.enabled'])
             .skip(request.offset)
             .take(request.limit)
             .where('user.email like :email and user.firstName like :firstName and user.lastName like :lastName', filter)
             .getMany();
 
-            // Count how many records match
-            const userSize: any = await this.repository
-              .createQueryBuilder('user')
-              .select('COUNT(user.id)', 'count')
-              .where('user.email like :email and user.firstName like :firstName and user.lastName like :lastName', filter)
-              .getRawOne();
-        
-            return {
-              success: true,
-              message: 'All users',
-              data: {
-                  users: allUsers,
-                  count: userSize.count,
-              },
-            };    
+        // Count how many records match
+        const userSize: any = await this.repository
+            .createQueryBuilder('user')
+            .select('COUNT(user.id)', 'count')
+            .where('user.email like :email and user.firstName like :firstName and user.lastName like :lastName', filter)
+            .getRawOne();
+
+        return {
+            success: true,
+            message: 'All users',
+            data: {
+                users: allUsers,
+                count: userSize.count,
+            },
+        };
 
     }
 
+    @Post('/update')
+    @ContentType("application/json")
+    @OpenAPI({ summary: 'Update an user' })
+    @ResponseSchema(Response, {
+        contentType: 'application/json',
+        statusCode: '200',
+    })
+    public async updateUser(@Body({ type: UpdateUserRequest }) request: UpdateUserRequest): Promise<Response> {
+        const user = await this.repository.createQueryBuilder('user')
+            .where('user.id = :id ', { id: request.id })
+            .getOne();
+
+        user.firstName = request.firstName;
+        user.lastName = request.lastName;
+
+        try {
+            const user_updated = await this.repository.save(user);
+            return {
+                success: true,
+                id: user.id,
+                message: 'User Updated',
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error,
+            }
+        }
+
+    }
+
+    @Get('/enable')
+    @ContentType("application/json")
+    @OpenAPI({ summary: 'Enable an user' })
+    @ResponseSchema(Response, {
+        contentType: 'application/json',
+        statusCode: '200',
+    })
+    public async enableUser(@Param('key') key: string): Promise<Response> {
+        const user_hash = await this.repository.createQueryBuilder('hashuser')
+            .select(['hashuser.id'])
+            .where('hashuser.key = :key ', { key: key })
+            .getOne();
+
+        const user = await this.repository.createQueryBuilder('user')
+            .where('user.id = :id ', { id: user_hash.id })
+            .getOne();
+
+        user.enabled = true;
+
+        try {
+            const user_enabled = await this.repository.save(user);
+            return {
+                success: true,
+                id: user.id,
+                message: 'User Enabled',
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error,
+            }
+        }
+
+    }
+
+    @Get('/disable')
+    @ContentType("application/json")
+    @OpenAPI({ summary: 'Disable an user' })
+    @ResponseSchema(Response, {
+        contentType: 'application/json',
+        statusCode: '200',
+    })
+    public async disableUser(@Param('key') key: string): Promise<Response>{
+        const user_hash = await this.repository.createQueryBuilder('hashuser')
+            .select(['hashuser.id'])
+            .where('hashuser.key = :key ', { key: key })
+            .getOne();
+
+        const user = await this.repository.createQueryBuilder('user')
+            .where('user.id = :id ', { id: user_hash.id })
+            .getOne();
+
+        user.enabled = false;
+        try {
+            const user_disabled = await this.repository.save(user);
+            return {
+                success: true,
+                id: user.id,
+                message: 'User Disabled',
+            }
+        } catch (error) {
+            return {
+                success: false,
+                message: error,
+            }
+        }
+    }
 
 }
