@@ -97,7 +97,7 @@ export class UserController {
         const filter = {
             firstName: '%',
             lastName: '%',
-            email: '%'
+            email: '%',
         };
 
         // Change filter values if we have them in the request
@@ -136,8 +136,8 @@ export class UserController {
               message: 'All users',
               data: {
                   users: allUsers,
-                  count: userSize.count
-              }
+                  count: userSize.count,
+              },
             };    
 
     }
