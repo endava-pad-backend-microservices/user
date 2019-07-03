@@ -9,4 +9,4 @@ before_install:
   - npm install -g ts-node typescript
   - npm install
 script: 
-  - npm run dev
+  - npm run build
