@@ -154,14 +154,19 @@ export class UserController {
             .where('user.id = :id ', { id: request.id })
             .getOne();
 
+        if (!user) {
+            return {
+                success: false,
+                message: 'User not found',
+            }
+        }
         user.firstName = request.firstName;
         user.lastName = request.lastName;
-
         try {
             const user_updated = await this.repository.save(user);
             return {
                 success: true,
-                id: user.id,
+                id: user_updated.id,
                 message: 'User Updated',
             }
         } catch (error) {
@@ -222,7 +227,7 @@ export class UserController {
     public async disableUser(@Param('id') id: number): Promise<Response> {
         const user = {
             id: id,
-            enabled: false
+            enabled: false,
         }
         try {
             const user_disabled = await this.repository.save(user);
