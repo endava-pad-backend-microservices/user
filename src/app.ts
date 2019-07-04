@@ -127,7 +127,7 @@ createConnection(config).then(async connection => {
 
   cloudConfigClient.load({
     context: process.env,
-    endpoint: 'http://localhost:8086',
+    endpoint: 'http://pad-b-config:8086',
     name: 'dev',
     profiles: 'dev',
     label: 'configuration',
@@ -135,12 +135,14 @@ createConnection(config).then(async connection => {
     version: '1.0.2',
   }).then(config => {
     process.env['BCRYPT_HASH'] = config.properties["users.bcrypt-hash-size"];
+    process.env["HASH_EXPIRE_TIME"] = config.properties["users.hash-expire-time"];
   })
 
   // run express application on port 3000
   app.listen(APP_LISTEN_PORT);
 
   console.log('App is ready');
+  return;
 
   client.start();
 });
