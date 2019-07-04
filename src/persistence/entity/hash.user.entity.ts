@@ -9,9 +9,9 @@ export class HashUser {
   private id: number;
 
   @Column({
-      unique: true,
-      nullable: false,
-    })
+    unique: true,
+    nullable: false,
+  })
   @Index()
   private key: string;
 
@@ -20,22 +20,22 @@ export class HashUser {
   private user: User;
 
   @Column({
-    nullable: true
+    nullable: true,
   })
-  private creationDate : Date;
+  private creationDate: Date;
 
   @Column({
-    nullable: true
+    nullable: true,
   })
-  private useDate : Date;
+  private useDate: Date;
 
   @Column({
     type: "enum",
     enum: EntityType,
     default: EntityType.USER_CREATED,
-    nullable: true
+    nullable: true,
   })
-  private type : EntityType;
+  private type: EntityType;
 }
 
 

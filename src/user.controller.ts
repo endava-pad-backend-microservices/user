@@ -39,20 +39,20 @@ export class UserController {
 
         try {
             const hashuser = {
-                key: (bcrypt.hashSync(Date.toString()+newUser.name,this.PASSWORD_HASH_SIZE)).replace(".","").replace("\/","").replace("&",""),
+                key: (bcrypt.hashSync(Date.toString() + newUser.name, this.PASSWORD_HASH_SIZE)).replace(".", "").replace("\/", "").replace("&", ""),
                 user: newUser,
-                creationDate : new Date()
+                creationDate: new Date()
             }
             var userId = 0;
-            await getManager().transaction(async transactionalEntityManager=>{
-                const savedUser : any = await transactionalEntityManager.getRepository(User).save(newUser);
+            await getManager().transaction(async transactionalEntityManager => {
+                const savedUser: any = await transactionalEntityManager.getRepository(User).save(newUser);
                 hashuser.user = savedUser;
                 userId = savedUser.id;
                 await transactionalEntityManager.getRepository(HashUser).save(hashuser);
             });
-            try{
-                new RabbitMq("user_created",JSON.stringify({"destination":[newUser.email],"user_name":newUser.name,"key":hashuser.key}));
-            }catch(error){
+            try {
+                new RabbitMq("user_created", JSON.stringify({ "destination": [newUser.email], "user_name": newUser.name, "key": hashuser.key }));
+            } catch (error) {
                 console.log(error);
             }
             return {
@@ -175,14 +175,19 @@ export class UserController {
             .where('user.id = :id ', { id: request.id })
             .getOne();
 
+        if (!user) {
+            return {
+                success: false,
+                message: 'User not found',
+            }
+        }
         user.firstName = request.firstName;
         user.lastName = request.lastName;
-
         try {
             const user_updated = await this.repository.save(user);
             return {
                 success: true,
-                id: user.id,
+                id: user_updated.id,
                 message: 'User Updated',
             }
         } catch (error) {
@@ -191,7 +196,6 @@ export class UserController {
                 message: error,
             }
         }
-
     }
 
     @Get('/enable/:key')
@@ -201,15 +205,15 @@ export class UserController {
         contentType: 'application/json',
         statusCode: '200',
     })
-    public async enableUser(@Param("key") key:string): Promise<Response> {
+    public async enableUser(@Param("key") key: string): Promise<Response> {
         try {
             const hashUserRepo = getManager().getRepository(HashUser);
-            const user_hash : any = await hashUserRepo.createQueryBuilder('hashuser')
-                .innerJoinAndSelect("hashuser.user","user")
+            const user_hash: any = await hashUserRepo.createQueryBuilder('hashuser')
+                .innerJoinAndSelect("hashuser.user", "user")
                 .where("hashuser.useDate is null and hashuser.creationDate + (:validationTime||' hour')::interval >= current_timestamp(0) and hashuser.key = :key ",
-                 { validationTime : process.env["HASH_EXPIRE_TIME"], key: key })
+                    { validationTime: process.env["HASH_EXPIRE_TIME"], key: key })
                 .getOne();
-            if(!user_hash){
+            if (!user_hash) {
                 return {
                     success: false,
                     message: "The user can not be enabled!",
@@ -217,8 +221,8 @@ export class UserController {
             }
             user_hash.user.enabled = true;
             user_hash.useDate = new Date();
-            await getManager().transaction(async transactionalEntityManager=>{
-                const savedUser : any = await transactionalEntityManager.getRepository(User).save(user_hash.user);
+            await getManager().transaction(async transactionalEntityManager => {
+                const savedUser: any = await transactionalEntityManager.getRepository(User).save(user_hash.user);
                 await transactionalEntityManager.getRepository(HashUser).save(user_hash);
             });
             return {
@@ -241,10 +245,10 @@ export class UserController {
         contentType: 'application/json',
         statusCode: '200',
     })
-    public async disableUser(@Param('id') id: number): Promise<Response>{
+    public async disableUser(@Param('id') id: number): Promise<Response> {
         const user = {
-            id:id,
-            enabled: false
+            id: id,
+            enabled: false,
         }
         try {
             const user_disabled = await this.repository.save(user);
