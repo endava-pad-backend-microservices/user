@@ -45,7 +45,7 @@ export class UserController {
             const hashuser = {
                 key: (bcrypt.hashSync(Date.toString() + newUser.name, this.PASSWORD_HASH_SIZE)).replace(".", "").replace("\/", "").replace("&", ""),
                 user: newUser,
-                creationDate: new Date()
+                creationDate: new Date(),
             }
             var userId = 0;
             await getManager().transaction(async transactionalEntityManager => {
