@@ -1,5 +1,6 @@
 import { EntityRepository, Repository } from "typeorm";
 import { User } from '../entity/user.entity'
+import { Response } from '../../common.response';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -8,7 +9,7 @@ export class UserRepository extends Repository<User> {
         return this.findOne({ username: username });
     }
 
-    public async getAllUsers(filter: any): Promise<any> {
+    public async getAllUsers(filter: any): Promise<Response> {
         // Create a Paginated query to return all the users
         const allUsers: User[] = await this
             .createQueryBuilder('user')
