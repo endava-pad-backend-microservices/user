@@ -1,7 +1,9 @@
 import { Body, ContentType, Controller, Post, Put, Get } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
-import { getManager } from "typeorm";
-import { User } from "./persistence/entity/user.entity";
+import { getCustomRepository } from "typeorm";
+import { UserRepository } from "./persistence/repository/user.repository";
+
+
 import bcrypt = require('bcrypt');
 import { CreateUserBody } from './create.user.request';
 import { LoginRequest } from './login.request';
@@ -17,7 +19,8 @@ export class UserController {
     private repository: any;
     private PASSWORD_HASH_SIZE: number = +process.env["BCRYPT_HASH"];
     constructor() {
-        this.repository = getManager().getRepository(User);
+        this.repository = getCustomRepository(UserRepository); 
+
     }
 
     @Put('/create')
@@ -56,10 +59,7 @@ export class UserController {
         statusCode: '200',
     })
     public async getOne(@Body({ type: LoginRequest }) request: LoginRequest): Promise<Response> {
-        const userToFind = await this.repository.createQueryBuilder('user')
-            .select(['user.id', 'user.firstName', 'user.lastName', 'user.email', 'user.password'])
-            .where('user.name = :name ', { name: request.username })
-            .getOne();
+        const userToFind: any = await this.repository.findByUserName(request.username);
 
         if (!userToFind) {
             return {
@@ -98,6 +98,8 @@ export class UserController {
             firstName: '%',
             lastName: '%',
             email: '%',
+            limit: request.limit,
+            offset: request.offset,
         };
 
         // Change filter values if we have them in the request
@@ -115,31 +117,7 @@ export class UserController {
 
 
 
-        // Create a Paginated query to return all the users
-        const allUsers: [User] = await this.repository
-            .createQueryBuilder('user')
-            .select(['user.id', 'user.firstName', 'user.lastName', 'user.email'])
-            .skip(request.offset)
-            .take(request.limit)
-            .where('user.email like :email and user.firstName like :firstName and user.lastName like :lastName', filter)
-            .getMany();
-
-            // Count how many records match
-            const userSize: any = await this.repository
-              .createQueryBuilder('user')
-              .select('COUNT(user.id)', 'count')
-              .where('user.email like :email and user.firstName like :firstName and user.lastName like :lastName', filter)
-              .getRawOne();
-        
-            return {
-              success: true,
-              message: 'All users',
-              data: {
-                  users: allUsers,
-                  count: userSize.count,
-              },
-            };    
-
+    return this.repository.getAllUsers(filter);
     }
 
 
