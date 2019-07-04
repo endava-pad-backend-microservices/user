@@ -4,11 +4,11 @@ import { User } from '../entity/user.entity'
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
 
-    findByUserName(username: string) {
+    public findByUserName(username: string): Promise<User> {
         return this.findOne({ username: username });
     }
 
-    async getAllUsers(filter: any) {
+    public async getAllUsers(filter: any): Promise<any> {
         // Create a Paginated query to return all the users
         const allUsers: User[] = await this
             .createQueryBuilder('user')
