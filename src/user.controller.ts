@@ -8,6 +8,9 @@ import { LoginRequest } from './login.request';
 import { Response } from './common.response';
 import { GetAllUserRequest } from './get.users.request';
 import { UpdateUserRequest } from './update.user.request';
+import { HashUser } from './persistence/entity/hash.user.entity';
+import { RabbitMq } from "./Service/RabbitService"
+
 
 
 @OpenAPI({
@@ -35,10 +38,26 @@ export class UserController {
         }
 
         try {
-            const savedUser = await this.repository.save(newUser);
+            const hashuser = {
+                key: (bcrypt.hashSync(Date.toString()+newUser.name,this.PASSWORD_HASH_SIZE)).replace(".","").replace("\/","").replace("&",""),
+                user: newUser,
+                creationDate : new Date()
+            }
+            var userId = 0;
+            await getManager().transaction(async transactionalEntityManager=>{
+                const savedUser : any = await transactionalEntityManager.getRepository(User).save(newUser);
+                hashuser.user = savedUser;
+                userId = savedUser.id;
+                await transactionalEntityManager.getRepository(HashUser).save(hashuser);
+            });
+            try{
+                new RabbitMq("user_created",JSON.stringify({"destination":[newUser.email],"user_name":newUser.name,"key":hashuser.key}));
+            }catch(error){
+                console.log(error);
+            }
             return {
                 success: true,
-                id: savedUser.id,
+                id: userId,
                 message: 'User Created',
             }
         } catch (error) {
@@ -175,30 +194,36 @@ export class UserController {
 
     }
 
-    @Get('/enable')
+    @Get('/enable/:key')
     @ContentType("application/json")
     @OpenAPI({ summary: 'Enable an user' })
     @ResponseSchema(Response, {
         contentType: 'application/json',
         statusCode: '200',
     })
-    public async enableUser(@Param('key') key: string): Promise<Response> {
-        const user_hash = await this.repository.createQueryBuilder('hashuser')
-            .select(['hashuser.id'])
-            .where('hashuser.key = :key ', { key: key })
-            .getOne();
-
-        const user = await this.repository.createQueryBuilder('user')
-            .where('user.id = :id ', { id: user_hash.id })
-            .getOne();
-
-        user.enabled = true;
-
+    public async enableUser(@Param("key") key:string): Promise<Response> {
         try {
-            const user_enabled = await this.repository.save(user);
+            const hashUserRepo = getManager().getRepository(HashUser);
+            const user_hash : any = await hashUserRepo.createQueryBuilder('hashuser')
+                .innerJoinAndSelect("hashuser.user","user")
+                .where("hashuser.useDate is null and hashuser.creationDate + (:validationTime||' hour')::interval >= current_timestamp(0) and hashuser.key = :key ",
+                 { validationTime : process.env["HASH_EXPIRE_TIME"], key: key })
+                .getOne();
+            if(!user_hash){
+                return {
+                    success: false,
+                    message: "The user can not be enabled!",
+                }
+            }
+            user_hash.user.enabled = true;
+            user_hash.useDate = new Date();
+            await getManager().transaction(async transactionalEntityManager=>{
+                const savedUser : any = await transactionalEntityManager.getRepository(User).save(user_hash.user);
+                await transactionalEntityManager.getRepository(HashUser).save(user_hash);
+            });
             return {
                 success: true,
-                id: user.id,
+                id: user_hash.user.id,
                 message: 'User Enabled',
             }
         } catch (error) {
@@ -207,32 +232,25 @@ export class UserController {
                 message: error,
             }
         }
-
     }
 
-    @Get('/disable')
+    @Get('/disable/:id')
     @ContentType("application/json")
     @OpenAPI({ summary: 'Disable an user' })
     @ResponseSchema(Response, {
         contentType: 'application/json',
         statusCode: '200',
     })
-    public async disableUser(@Param('key') key: string): Promise<Response>{
-        const user_hash = await this.repository.createQueryBuilder('hashuser')
-            .select(['hashuser.id'])
-            .where('hashuser.key = :key ', { key: key })
-            .getOne();
-
-        const user = await this.repository.createQueryBuilder('user')
-            .where('user.id = :id ', { id: user_hash.id })
-            .getOne();
-
-        user.enabled = false;
+    public async disableUser(@Param('id') id: number): Promise<Response>{
+        const user = {
+            id:id,
+            enabled: false
+        }
         try {
             const user_disabled = await this.repository.save(user);
             return {
                 success: true,
-                id: user.id,
+                id: user_disabled.id,
                 message: 'User Disabled',
             }
         } catch (error) {
@@ -242,5 +260,4 @@ export class UserController {
             }
         }
     }
-
 }
