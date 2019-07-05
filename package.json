@@ -26,6 +26,7 @@
   "dependencies": {
     "amqplib": "^0.5.3",
     "api-spec-converter": "^2.8.3",
+    "appmetrics-zipkin": "^1.1.1",
     "bcrypt": "^3.0.4",
     "body-parser": "^1.18.3",
     "class-validator": "^0.9.1",

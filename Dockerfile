@@ -21,6 +21,8 @@ ENV SERVER_URL=pad-b-users
 ENV EUREKA_URL=pad-b-registry
 ENV POSTGRES_HOSTNAME=pad-b-users
 ENV RABBIT_URL=amqp://pad-b-rabbit:5672
+ENV TRACING_URL=pad-b-tracing
+ENV TRACING_PORT=8090
 
 RUN npm install
 
