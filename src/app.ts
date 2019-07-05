@@ -142,7 +142,6 @@ createConnection(config).then(async connection => {
   app.listen(APP_LISTEN_PORT);
 
   console.log('App is ready');
-  return;
 
   client.start();
 });

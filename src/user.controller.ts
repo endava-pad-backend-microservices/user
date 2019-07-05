@@ -1,18 +1,19 @@
-import { Body, ContentType, Controller, Post, Put, Get, Patch, Param } from 'routing-controllers';
+import { User } from 'persistence/entity/user.entity';
+import { HashRepository } from 'persistence/repository/hash.repository';
+import { Body, ContentType, Controller, Get, Param, Post, Put } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
-import { getCustomRepository, getManager } from "typeorm";
+import { getCustomRepository, getManager, getRepository } from "typeorm";
+import { Response } from './common.response';
+import { CreateUserBody } from './create.user.request';
+import { GetAllUserRequest } from './get.users.request';
+import { LoginRequest } from './login.request';
+import { HashUser } from './persistence/entity/hash.user.entity';
 import { UserRepository } from "./persistence/repository/user.repository";
+import { RabbitMq } from "./Service/RabbitService";
+import { UpdateUserRequest } from './update.user.request';
 
 
 import bcrypt = require('bcrypt');
-import { CreateUserBody } from './create.user.request';
-import { LoginRequest } from './login.request';
-import { Response } from './common.response';
-import { GetAllUserRequest } from './get.users.request';
-import { UpdateUserRequest } from './update.user.request';
-import { HashUser } from './persistence/entity/hash.user.entity';
-import { RabbitMq } from "./Service/RabbitService"
-import { User } from 'persistence/entity/user.entity';
 
 
 
@@ -57,7 +58,10 @@ export class UserController {
             try {
                 new RabbitMq("user_created", JSON.stringify({ "destination": [newUser.email], "user_name": newUser.name, "key": hashuser.key }));
             } catch (error) {
-                console.log(error);
+                return {
+                    success: false,
+                    message: error,
+                }
             }
             return {
                 success: true,
@@ -137,8 +141,6 @@ export class UserController {
             filter.email = '%' + request.email + '%';
         }
 
-
-
         return this.repository.getAllUsers(filter);
     }
 
@@ -150,10 +152,7 @@ export class UserController {
         statusCode: '200',
     })
     public async updateUser(@Body({ type: UpdateUserRequest }) request: UpdateUserRequest): Promise<Response> {
-        const user = await this.repository.createQueryBuilder('user')
-            .where('user.id = :id ', { id: request.id })
-            .getOne();
-
+        const user = await this.repository.findById(request.id);
         if (!user) {
             return {
                 success: false,
@@ -186,12 +185,8 @@ export class UserController {
     })
     public async enableUser(@Param("key") key: string): Promise<Response> {
         try {
-            const hashUserRepo = getManager().getRepository(HashUser);
-            const user_hash: any = await hashUserRepo.createQueryBuilder('hashuser')
-                .innerJoinAndSelect("hashuser.user", "user")
-                .where("hashuser.useDate is null and hashuser.creationDate + (:validationTime||' hour')::interval >= current_timestamp(0) and hashuser.key = :key ",
-                    { validationTime: process.env["HASH_EXPIRE_TIME"], key: key })
-                .getOne();
+            let hash_repository = getCustomRepository(HashRepository);
+            const user_hash: any = hash_repository.getHashedUser(key);
             if (!user_hash) {
                 return {
                     success: false,
@@ -201,7 +196,7 @@ export class UserController {
             user_hash.user.enabled = true;
             user_hash.useDate = new Date();
             await getManager().transaction(async transactionalEntityManager => {
-                const savedUser: any = await transactionalEntityManager.getRepository(User).save(user_hash.user);
+                await transactionalEntityManager.getRepository(User).save(user_hash.user);
                 await transactionalEntityManager.getRepository(HashUser).save(user_hash);
             });
             return {

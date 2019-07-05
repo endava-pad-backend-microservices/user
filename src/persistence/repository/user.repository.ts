@@ -1,14 +1,16 @@
 import { EntityRepository, Repository } from "typeorm";
-import { User } from '../entity/user.entity'
 import { Response } from '../../common.response';
-import { UpdateUserRequest } from "update.user.request";
-import { Body } from "routing-controllers";
+import { User } from '../entity/user.entity';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
 
     public findByUserName(username: string): Promise<User> {
         return this.findOne({ username: username });
+    }
+
+    public findById(id: number): Promise<User> {
+        return this.findOne({ id: id });
     }
 
     public async getAllUsers(filter: any): Promise<Response> {
