@@ -21,4 +21,9 @@ export class User {
 
   @Column()
   private password: string;
+
+  @Column({
+    default: false,
+  })
+  private enabled: boolean;
 }

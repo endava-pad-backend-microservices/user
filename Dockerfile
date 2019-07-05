@@ -20,6 +20,7 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 ENV SERVER_URL=pad-b-users
 ENV EUREKA_URL=pad-b-registry
 ENV POSTGRES_HOSTNAME=pad-b-users
+ENV RABBIT_URL=amqp://pad-b-rabbit:5672
 
 RUN npm install
 
