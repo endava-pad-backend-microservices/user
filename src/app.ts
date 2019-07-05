@@ -1,4 +1,10 @@
 import "reflect-metadata"; // this shim is required
+const appzip = require('appmetrics-zipkin')({
+  host: process.env.TRACING_URL,
+  port: process.env.TRACING_PORT,
+  serviceName: "users",
+  sampleRate: 1.0,
+});
 import { createExpressServer, getMetadataArgsStorage } from "routing-controllers";
 import { createConnection } from "typeorm";
 import { getFromContainer, MetadataStorage } from 'class-validator';
