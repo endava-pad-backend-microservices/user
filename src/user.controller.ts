@@ -44,7 +44,7 @@ export class UserController {
 
         try {
             const hashuser = {
-                key: (bcrypt.hashSync(Date.toString() + newUser.name, this.PASSWORD_HASH_SIZE)).replace(".", "").replace("\/", "").replace("&", ""),
+                key: (bcrypt.hashSync(Date.toString() + newUser.name, this.PASSWORD_HASH_SIZE)).replace(/[.|\/|&]/g, ""),
                 user: newUser,
                 creationDate: new Date(),
             }
