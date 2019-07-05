@@ -47,7 +47,7 @@ export class UserController {
                 user: newUser,
                 creationDate: new Date(),
             }
-            var userId = 0;
+            let userId = 0;
             await getManager().transaction(async transactionalEntityManager => {
                 const savedUser: any = await transactionalEntityManager.getRepository(User).save(newUser);
                 hashuser.user = savedUser;

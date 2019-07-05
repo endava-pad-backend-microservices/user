@@ -1,6 +1,8 @@
 import { EntityRepository, Repository } from "typeorm";
 import { User } from '../entity/user.entity'
 import { Response } from '../../common.response';
+import { UpdateUserRequest } from "update.user.request";
+import { Body } from "routing-controllers";
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -36,7 +38,5 @@ export class UserRepository extends Repository<User> {
         }
 
     }
-
-
 
 }
