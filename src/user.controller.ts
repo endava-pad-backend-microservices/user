@@ -1,5 +1,5 @@
-import { User } from 'persistence/entity/user.entity';
-import { HashRepository } from 'persistence/repository/hash.repository';
+import { User } from './persistence/entity/user.entity';
+import { HashRepository } from './persistence/repository/hash.repository';
 import { Body, ContentType, Controller, Get, Param, Post, Put } from 'routing-controllers';
 import { OpenAPI, ResponseSchema } from 'routing-controllers-openapi';
 import { getCustomRepository, getManager, getRepository } from "typeorm";
@@ -185,7 +185,7 @@ export class UserController {
     })
     public async enableUser(@Param("key") key: string): Promise<Response> {
         try {
-            let hash_repository = getCustomRepository(HashRepository);
+            const hash_repository = getCustomRepository(HashRepository);
             const user_hash: any = hash_repository.getHashedUser(key);
             if (!user_hash) {
                 return {
