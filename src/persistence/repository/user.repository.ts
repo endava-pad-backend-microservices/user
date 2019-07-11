@@ -13,7 +13,7 @@ export class UserRepository extends Repository<User> {
         return this.findOne({ id: id });
     }
 
-    public async getAllUsers(filter: any){
+    public async getAllUsers(filter: any): Promise<Response>{
         // Create a Paginated query to return all the users
         const allUsers: User[] = await this
             .createQueryBuilder('user')

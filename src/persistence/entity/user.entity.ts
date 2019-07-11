@@ -9,6 +9,10 @@ export class User {
   @Column()
   public name: string;
 
+  @ManyToMany(type=>Role, roles=>roles.id)
+  @JoinTable()
+  public roles: Role[];
+
   @Column()
   private firstName: string;
 
@@ -28,7 +32,4 @@ export class User {
   })
   private enabled: boolean;
 
-  @ManyToMany(type=>Role, roles=>roles.id)
-  @JoinTable()
-  public roles: Role[];
 }

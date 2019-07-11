@@ -18,15 +18,14 @@ export class RoleRepository extends Repository<Role> {
     }
 
     public async createRole(role: any): Promise<Role> {
-        const createdRole : Role = await this.save(role);
+        const createdRole: Role = await this.save(role);
         return createdRole;
     }
 
-    public async getFromIds(idRoles: Array<number>):Promise<Role[]>{ 
+    public async getFromIds(idRoles: Array<number>): Promise<Role[]>{ 
         return await this.createQueryBuilder()
         .select()
         .whereInIds(idRoles)
         .getMany();
-    }
-       
+    }      
 }

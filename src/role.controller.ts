@@ -15,7 +15,7 @@ export class RoleController {
     constructor() {
         this.repository = getCustomRepository(RoleRepository);
     }
-    repository: RoleRepository;
+    private repository: RoleRepository;
 
     @Put('/create')
     @ContentType("application/json")
@@ -24,13 +24,13 @@ export class RoleController {
         contentType: 'application/json',
         statusCode: '200',
     })
-    public async createRole(@Body({type: String}) request: {name:string}): Promise<Response> {
+    public async createRole(@Body({type: String}) request: {name: string}): Promise<Response> {
         try {
-            const createdRole : any = await this.repository.createRole(request);
+            const createdRole: any = await this.repository.createRole(request);
             return {
                 success: true,
                 id: createdRole.id,
-                message: "Role Created!"
+                message: "Role Created!",
             }
         } catch (error) {
             return {
@@ -47,9 +47,9 @@ export class RoleController {
         contentType: 'application/json',
         statusCode: '200',
     })
-    public async get():Promise<Response>{
+    public async get(): Promise<Response>{
         try{
-            const allRoles : Role[] = await this.repository.getAllRoles();
+            const allRoles: Role[] = await this.repository.getAllRoles();
             return {success: true,
                 message: 'All roles',
                 data: {
@@ -73,7 +73,7 @@ export class RoleController {
         contentType: 'application/json',
         statusCode: '200',
     })
-    public async getById(@Param("id") id:number) :Promise<Response>{
+    public async getById(@Param("id") id: number): Promise<Response>{
         try{
             
             const role = await this.repository.getFromIds([id])
@@ -97,9 +97,8 @@ export class RoleController {
         contentType: 'application/json',
         statusCode: '200',
     })
-    public async deleteById(@Param("id") id:number) :Promise<Response>{
+    public async deleteById(@Param("id") id: number): Promise<Response>{
         try{
-            
             const role = await this.repository.delete(id);
             return {success: true,
                 message: 'Role deleted!',
