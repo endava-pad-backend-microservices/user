@@ -37,5 +37,3 @@ export class HashUser {
   })
   private type: EntityType;
 }
-
-

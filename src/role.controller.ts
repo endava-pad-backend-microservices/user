@@ -53,8 +53,8 @@ export class RoleController {
             const allRoles: Role[] = await this.repository.getAllRoles();
             return {
                 data: {
-                    roles: allRoles,
                     count: allRoles.length,
+                    roles: allRoles,
                 },
                 message: 'All roles',
                 success: true,

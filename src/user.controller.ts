@@ -53,7 +53,7 @@ export class UserController {
             let userId = 0;
             if(request.roles && request.roles.length){
                 newUser.roles = await  getCustomRepository(RoleRepository).getFromIds(
-                    request.roles.map((curr: Role)=>{return curr.id})
+                    request.roles.map((curr: Role)=>{return curr.id}),
                     )
             }
             await getManager().transaction(async transactionalEntityManager => {
