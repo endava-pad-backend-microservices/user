@@ -11,6 +11,8 @@ import { HashUser } from './persistence/entity/hash.user.entity';
 import { UserRepository } from "./persistence/repository/user.repository";
 import { RabbitMq } from "./Service/RabbitService";
 import { UpdateUserRequest } from './update.user.request';
+import {  RoleRepository } from './persistence/repository/role.repository';
+import { Role } from './persistence/entity/role.entity';
 
 
 import bcrypt = require('bcrypt');
@@ -26,7 +28,6 @@ export class UserController {
     private PASSWORD_HASH_SIZE: number = +process.env["BCRYPT_HASH"];
     constructor() {
         this.repository = getCustomRepository(UserRepository);
-
     }
 
     @Put('/create')
@@ -37,6 +38,7 @@ export class UserController {
         statusCode: '200',
     })
     public async createUser(@Body({ type: CreateUserBody }) request: CreateUserBody): Promise<Response> {
+         
         const newUser = {
             ...request,
             password: bcrypt.hashSync(request.password, this.PASSWORD_HASH_SIZE),
@@ -49,6 +51,11 @@ export class UserController {
                 creationDate: new Date(),
             }
             let userId = 0;
+            if(request.roles && request.roles.length){
+                newUser.roles = await  getCustomRepository(RoleRepository).getFromIds(
+                    request.roles.map((curr: Role)=>{return curr.id}),
+                    )
+            }
             await getManager().transaction(async transactionalEntityManager => {
                 const savedUser: any = await transactionalEntityManager.getRepository(User).save(newUser);
                 hashuser.user = savedUser;
@@ -161,6 +168,7 @@ export class UserController {
         }
         user.firstName = request.firstName;
         user.lastName = request.lastName;
+        user.roles = request.roles;
         try {
             const user_updated = await this.repository.save(user);
             return {
@@ -186,7 +194,7 @@ export class UserController {
     public async enableUser(@Param("key") key: string): Promise<Response> {
         try {
             const hash_repository = getCustomRepository(HashRepository);
-            const user_hash: any = hash_repository.getHashedUser(key);
+            const user_hash: any = await hash_repository.getHashedUser(key);
             if (!user_hash) {
                 return {
                     success: false,

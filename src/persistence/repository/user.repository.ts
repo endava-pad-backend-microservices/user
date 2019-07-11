@@ -6,18 +6,19 @@ import { User } from '../entity/user.entity';
 export class UserRepository extends Repository<User> {
 
     public findByUserName(username: string): Promise<User> {
-        return this.findOne({ username: username });
+        return this.findOne({ name: username });
     }
 
     public findById(id: number): Promise<User> {
         return this.findOne({ id: id });
     }
 
-    public async getAllUsers(filter: any): Promise<Response> {
+    public async getAllUsers(filter: any): Promise<Response>{
         // Create a Paginated query to return all the users
         const allUsers: User[] = await this
             .createQueryBuilder('user')
             .select(['user.id', 'user.firstName', 'user.lastName', 'user.email'])
+            .leftJoinAndSelect("user.roles","role")
             .skip(filter.offset)
             .take(filter.limit)
             .where('user.email like :email and user.firstName like :firstName and user.lastName like :lastName', filter)

@@ -1,4 +1,5 @@
-import { IsString, IsEmail } from 'class-validator';
+import { IsString, IsEmail, IsArray } from 'class-validator';
+import {Role} from './persistence/entity/role.entity';
 
 export class CreateUserBody {
     @IsString()
@@ -16,5 +17,8 @@ export class CreateUserBody {
     @IsString()
     @IsEmail()
     public email: string;
+
+    @IsArray()
+    public roles: Role[];
 }
 
