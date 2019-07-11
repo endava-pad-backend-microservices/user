@@ -16,6 +16,7 @@ import cloudConfigClient = require("cloud-config-client");
 const config = require(path.join(__dirname, '../ormconfig.js'))
 import { routingControllersToSpec } from 'routing-controllers-openapi';
 import { UserController } from './user.controller'
+import { RoleController } from './role.controller'
 import { Request, Response } from 'express';
 import healthcheck = require('healthcheck-middleware');
 import Converter = require('api-spec-converter');
@@ -61,7 +62,7 @@ createConnection(config).then(async connection => {
   });
 
   const routingControllersOptions = {
-    controllers: [UserController],
+    controllers: [UserController,RoleController],
     cors: true,
     routePrefix: "",
   };

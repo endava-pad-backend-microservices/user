@@ -1,4 +1,5 @@
-import { IsString, IsNumber } from "class-validator";
+import { IsString, IsNumber, IsArray } from "class-validator";
+import { Role } from './persistence/entity/role.entity';
 
 export class UpdateUserRequest {
     @IsNumber()
@@ -9,4 +10,7 @@ export class UpdateUserRequest {
 
     @IsString()
     public lastName: string;
+
+    @IsArray()
+    public roles: Role[]
 }
