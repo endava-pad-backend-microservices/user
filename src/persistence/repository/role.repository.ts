@@ -17,8 +17,8 @@ export class RoleRepository extends Repository<Role> {
         .getRawOne();
     }
 
-    public async createRole(role: any): Promise<Role> {
-        const createdRole: Role = await this.save(role);
+    public async createRole(name: string): Promise<Role> {
+        const createdRole: Role = await this.save({name: name});
         return createdRole;
     }
 

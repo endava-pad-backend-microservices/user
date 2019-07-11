@@ -12,10 +12,11 @@ import {Role} from './persistence/entity/role.entity';
 })
 @Controller("/roles")
 export class RoleController {
+    private repository: RoleRepository;
+
     constructor() {
         this.repository = getCustomRepository(RoleRepository);
     }
-    private repository: RoleRepository;
 
     @Put('/create')
     @ContentType("application/json")
@@ -26,16 +27,16 @@ export class RoleController {
     })
     public async createRole(@Body({type: String}) request: {name: string}): Promise<Response> {
         try {
-            const createdRole: any = await this.repository.createRole(request);
+            const createdRole: Role = await this.repository.createRole(request.name);
             return {
-                success: true,
                 id: createdRole.id,
                 message: "Role Created!",
+                success: true,
             }
         } catch (error) {
             return {
-                success: false,
                 message: error,
+                success: false,
             }
         }
     }
@@ -50,18 +51,19 @@ export class RoleController {
     public async get(): Promise<Response>{
         try{
             const allRoles: Role[] = await this.repository.getAllRoles();
-            return {success: true,
-                message: 'All roles',
+            return {
                 data: {
                     roles: allRoles,
                     count: allRoles.length,
                 },
+                message: 'All roles',
+                success: true,
             }
         }
         catch(error){
             return{
-                success: false,
                 message: error,
+                success: false,
             }
         }
     }
@@ -77,15 +79,16 @@ export class RoleController {
         try{
             
             const role = await this.repository.getFromIds([id])
-            return {success: true,
-                message: 'Role',
+            return {
                 data: role,
+                message: 'Role',
+                success: true,
             }
         }
         catch(error){
             return{
-                success: false,
                 message: error,
+                success: false,
             }
         }
     }
@@ -100,15 +103,16 @@ export class RoleController {
     public async deleteById(@Param("id") id: number): Promise<Response>{
         try{
             const role = await this.repository.delete(id);
-            return {success: true,
-                message: 'Role deleted!',
+            return {
                 id: id,
+                message: 'Role deleted!',
+                success: true,
             }
         }
         catch(error){
             return{
-                success: false,
                 message: error,
+                success: false,
             }
         }
     }

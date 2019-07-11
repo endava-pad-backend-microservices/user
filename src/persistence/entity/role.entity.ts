@@ -7,9 +7,9 @@ export class Role {
     public id: number;
 
     @Column({
-        unique: true,
         nullable: false,
+        unique: true,
       })
-    private name: string;
+    public name: string;
 
 }
